@@ -8,11 +8,13 @@ middleware-like implementation.
 For this to work, you need to work with the functionals and not with the recusive /
 loop implementations of your algorithms. A functional is a function that takes a
 function as one of its arguments, so we need at least a language with functions
-as first class citizens. The fixpoint operator plugs the functional itself into
+as first class citizens (usually the type system must support the implementation
+of the fixpoint operator as it usually is problematic in most statically typed
+languages). The fixpoint operator plugs the functional itself into
 the functional to create the recursive implementation. For the factorial function this
 looks like the following:
 
-```
+```js
 var factorial_functional = f => i => (i == 0) ? 1 : i * f(i - 1)
 ```
 
@@ -20,7 +22,7 @@ This functional takes a function and a number. The number is the usual argument 
 factorial function. The function is used for the recursion. Applying the fixpoint operator
 gives the normal implementation of the factorial function:
 
-```
+```js
 var factorial = FIX(factorial_functional)
 
 console.log(factorial(5))
@@ -32,13 +34,14 @@ Well usually it is tedious to put the logic in place without making the code awk
 have one implementation, that always prints all steps, or you have two implementations with one
 never printing anything and a debug version that prints all values. There are certainly other
 strange ways you could try to implement this like an extra optional argument to the function that
-encodes whether to print or not. But all these methods make the code less readable.
+encodes whether to print or not. But all these methods make the code less readable and are mostly
+confusing.
 
 The best we could ask for is, to have a general function that implements the "printing" mechanics
 and we could simply plug it where we want to have it. This is exactly, what we can do with
 the fixpoint operator. Consider this printing functional:
 
-```
+```js
 var print_steps = f => f_ => p => {
   var result = f(f_)(p)
   console.log(result)
@@ -49,16 +52,26 @@ var print_steps = f => f_ => p => {
 It takes two functions and wraps the second around the first. We then use the result and print it
 before returning it. With this we can simply do:
 
-```
+```js
 var printing_factorial = FIX(print_steps(factorial_functional))
 
 printing_factorial(5) // <-- prints all in between values.
 ```
 
 The cool thing about this is, that someone could write a wrapper, that does some fancy stuff and you
-do not care how it works. You can simply use it. 
+do not care how it works. You can simply use it.
 
+Other wrappers could be memoization wrappers or even some that keep track of the call stack, handle
+errors etc. They are readily composable.
 
-... TODO
+```js
+var memo_print = FIX(memo(print_steps(factorial_functional))) // print every calculation
+```
 
-Read: http://www.lfcs.inf.ed.ac.uk/reports/97/ECS-LFCS-97-375/ for more ;)
+## This repo
+
+This repository only contains a few examples to get you started.
+
+## Further reading
+
+You can read more about this technique [here](http://www.lfcs.inf.ed.ac.uk/reports/97/ECS-LFCS-97-375/). All examples in this paper are in ML.
